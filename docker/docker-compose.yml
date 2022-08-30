@@ -1,0 +1,385 @@
+version: "3"
+services:
+
+
+###################################################################### PLEX ########################################################################
+    sonarr:
+      #https://hub.docker.com/r/linuxserver/sonarr
+      # use host.docker.internal to connect internally to plex
+      image: lscr.io/linuxserver/sonarr
+      container_name: sonarr
+      environment:
+        - TZ=Europe/London
+        - PUID=0
+        - PGID=0
+      volumes:
+        - /local/docker-data/sonarr:/config
+        - /local/plex/tv:/tv #optional
+        - /local/docker-data/downloads:/downloads
+      ports:
+        - 8989:8989
+      restart: always
+
+    radarr:
+      #https://hub.docker.com/r/linuxserver/radarr
+      image: lscr.io/linuxserver/radarr
+      container_name: radarr
+      environment:
+        - TZ=Europe/London
+        - PUID=0
+        - PGID=0
+      volumes:
+        - /local/docker-data/radarr:/config
+        - /local/plex/movies:/movies #optional
+        - /local/docker-data/downloads:/downloads
+      ports:
+        - 7878:7878
+      restart: always
+
+    prowlarr:
+      #https://hub.docker.com/r/linuxserver/prowlarr
+      image: lscr.io/linuxserver/prowlarr:develop
+      container_name: prowlarr
+      environment:
+        - PUID=0
+        - PGID=0
+        - TZ=Europe/London
+      volumes:
+        - /local/docker-data/prowlarr:/config
+      ports:
+        - 9696:9696
+      restart: always
+
+    qb: 
+      #https://hub.docker.com/r/markusmcnugen/qbittorrentvpn/
+      # username - admin, password - adminadmin
+      image: markusmcnugen/qbittorrentvpn
+      container_name: qb
+      environment:
+        - TZ=Europe/London
+        - VPN_ENABLED=NO
+        - LAN_NETWORK=192.168.1.0/24
+        - NAME_SERVERS=1.1.1.1,8.8.8.8
+        - PUID=0
+        - PGID=0
+      volumes:
+        - /local/docker-data/qbittorrent:/config
+        - /local/docker-data/downloads:/downloads
+      ports:
+        - 8080:8080
+        - 8999:8999
+        - 8999:8999/udp
+      restart: always
+      privileged: true
+
+    slskd:
+      #https://github.com/slskd/slskd
+      image: slskd/slskd
+      container_name: slskd
+      ports:
+        - "5000:5000"
+        - "5001:5001"
+        - "50000:50000"
+      volumes:
+        - /local/docker-data/soulseek:/app
+        - /local/docker-data/plex/music:/music
+        - /local/docker-data/downloads:/download
+      restart: always
+
+    lidarr:
+        image: lscr.io/linuxserver/lidarr:latest
+        container_name: lidarr
+        environment:
+          - PUID=0
+          - PGID=0
+          - TZ=Europe/London
+        volumes:
+          - /local/docker-data/lidarr:/config
+          - /local/docker-data/plex/music:/music #optional
+          - /local/docker-data/downloads:/downloads #optional
+        ports:
+          - 8686:8686
+        restart: unless-stopped
+
+    tautulli:
+        image: lscr.io/linuxserver/tautulli:latest
+        container_name: tautulli
+        environment:
+          - PUID=1000
+          - PGID=1000
+          - TZ=Europe/London
+        volumes:
+          - /local/docker-data/tautulli:/config
+        ports:
+          - 8181:8181
+        restart: unless-stopped
+
+    duckdns:
+        image: lscr.io/linuxserver/duckdns:latest
+        container_name: duckdns
+        environment:
+          - PUID=1000 #optional
+          - PGID=1000 #optional
+          - TZ=Europe/London
+          - SUBDOMAINS=momrpi
+          - TOKEN=d7182074-5652-44b5-8d37-19c9b55355ee
+          - LOG_FILE=false #optional
+        volumes:
+          - /local/docker-data/duckdns:/config #optional
+        restart: unless-stopped
+
+    ombi:
+      image: lscr.io/linuxserver/ombi:latest
+      container_name: ombi
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=Europe/London
+        - BASE_URL=/ombi #optional
+      volumes:
+        - /local/docker-data/ombi:/config
+      ports:
+        - 24005:3579
+      restart: unless-stopped
+
+    readarr:
+      image: lscr.io/linuxserver/readarr:develop
+      container_name: readarr
+      environment:
+        - PUID=0
+        - PGID=0
+        - TZ=Europe/London
+      volumes:
+        - /local/docker-data/readarr:/config
+        - /local/docker-data/plex/Audio_books:/books #optional
+        - /local/docker-data/downloads:/downloads #optional
+      ports:
+        - 8787:8787
+      restart: unless-stopped      
+
+
+###################################################################### JOE ########################################################################
+
+    pihole:
+      container_name: pihole
+      image: pihole/pihole:latest
+      # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+      ports:
+        - "53:53/tcp"
+        - "53:53/udp"
+        - "24001:80/tcp"
+      environment:
+        TZ: 'America/Chicago'
+        WEBPASSWORD: 'Elementsfx6100'
+        #dns: '127.0.0.1'
+        dns1: '1.1.1.1'
+        dns2: '1.0.0.1'
+      volumes:
+        - '/local/docker-data/pihole:/etc/pihole'
+        - '/local/docker-data/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'    
+      #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities   
+      restart: unless-stopped
+
+    heimdall:
+      image: lscr.io/linuxserver/heimdall:latest
+      container_name: heimdall
+      environment:
+        - PUID=1000
+        - PGID=1000
+        - TZ=Europe/London
+      volumes:
+        - /local/docker-data/heimdall:/config
+      ports:
+        - 24000:80
+        - 442:443
+      restart: unless-stopped
+
+
+    #web:
+     # image: nginx
+      #container_name: nginx
+      #volumes:
+      # - /local/docker-data/nginx/site-content:/usr/share/nginx/html
+       #- /local/docker-data/nginx/templates:/etc/nginx/templates
+       # show nginx template
+      #ports:
+      # - "24011:80"
+      #environment:
+      # - NGINX_HOST=resins.hutchinson.com
+      # - NGINX_PORT=80
+      # - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/templates/default.conf.template
+
+
+
+
+
+    app:
+      image: 'jc21/nginx-proxy-manager:latest'
+      container_name: nginx-proxy
+      restart: unless-stopped
+      ports:
+        # These ports are in format <host-port>:<container-port>
+        - '80:80' # Public HTTP Port
+        - '443:443' # Public HTTPS Port
+        - '24003:81' # Admin Web Port
+        # Add any other Stream port you want to expose
+        # - '21:21' # FTP
+      # Uncomment the next line if you uncomment anything in the section
+      # environment:
+        # Uncomment this if you want to change the location of 
+        # the SQLite DB file within the container
+        # DB_SQLITE_FILE: "/data/database.sqlite"
+
+        # Uncomment this if IPv6 is not enabled on your host
+        # DISABLE_IPV6: 'true'
+      volumes:
+        - /local/docker-data/nginx-proxy-manager/data:/data
+        - /local/docker-data/nginx-proxy-manager/encrypt./letsencrypt:/etc/letsencrypt
+
+
+    elasticsearch-mom:
+      container_name: elasticsearch-mom
+      image: docker.io/bitnami/elasticsearch:7
+      volumes:
+        - '/local/docker-data/elasticsearch-mom:/bitnami/elasticsearch/data'
+
+    db-mom:
+      image: docker.io/bitnami/mariadb:10.4
+      container_name: mariadb-mom
+      ports:
+      - '3306:3306'
+      restart: always
+      environment:
+        # defualt root user: root
+        MARIADB_ROOT_PASSWORD: Elementsfx6100
+        MARIADB_DATABASE: magento
+        ALLOW_EMPTY_PASSWORD: yes
+        #ALLOW_EMPTY_PASSWORD: yes
+        # You have to login via adminer web gui first for reasons....
+        #for magento just create a table 
+        # Access cli for mariadb by 
+        # sudo docker exec -it mariadb-mom mariadb --user root -pElementsfx6100
+        # user - user_magento
+        # password - asR78{~?P2235Ad5dd
+          #ugh https://stackoverflow.com/questions/14011968/user-cant-access-a-database
+          #CREATE DATABASE magento;
+          #CREATE USER 'user_magento' IDENTIFIED BY 'asR78{~?P2235Ad5dd';
+          #GRANT USAGE ON *.* TO 'user_magento'@'%' IDENTIFIED BY 'asR78{~?P2235Ad5dd';
+          #GRANT USAGE ON *.* TO 'user_magento'@'localhost' IDENTIFIED BY 'asR78{~?P2235Ad5dd';
+          #GRANT ALL PRIVILEGES ON magento.* TO "user_magento"@"%" IDENTIFIED BY "asR78{~?P2235Ad5dd";
+          #GRANT ALL PRIVILEGES ON magento.* TO "user_magento"@"localhost" IDENTIFIED BY "asR78{~?P2235Ad5dd";
+          #FLUSH PRIVILEGES;
+        # Misc commands:
+          #docker exec -it mariadb-mom mariadb --user user_wordpress -pasR78{~?P2235Ad5dd
+          #select host, user, password from mysql.user;
+          #SHOW GRANTS FOR 'user_wordpress'@'%';
+      volumes:
+        - /local/docker-data/mariadb-mom:/bitnami/mariadb
+
+    adminer:
+      #adminer is a web-front end for databases - it can connect to any databases
+      image: adminer
+      container_name: adminer
+      restart: always
+      ports:
+        - 24002:8080
+
+    magento-mom:
+      #https://hub.docker.com/r/bitnami/magento
+      #https://github.com/bitnami/bitnami-docker-magento
+      image: docker.io/bitnami/magento:latest
+      container_name: magento-mom
+      ports:
+        - '24013:8080'
+        - '24014:8443'
+      environment:
+        - MAGENTO_HOST=randomresins.uk
+        - MAGENTO_EXTERNAL_HTTP_PORT_NUMBER=24013
+        - MAGENTO_DATABASE_HOST=db-mom
+        - MAGENTO_DATABASE_PORT_NUMBER=3306
+        - MAGENTO_DATABASE_USER=root
+        - MAGENTO_DATABASE_PASSWORD=Elementsfx6100
+        - MAGENTO_DATABASE_NAME=magento
+        - ELASTICSEARCH_HOST=elasticsearch-mom
+        - ELASTICSEARCH_PORT_NUMBER=9200
+        - MAGENTO_USERNAME=RavingSmurfGB
+        - MAGENTO_PASSWORD=Elementsfx6100
+        - MAGENTO_MODE=developer
+        # ALLOW_EMPTY_PASSWORD is recommended only for development.
+        #- ALLOW_EMPTY_PASSWORD=yes
+      volumes:
+        - '/local/docker-data/magento-mom:/bitnami/magento'
+      depends_on:
+        - db-mom
+        - elasticsearch-mom
+
+
+   # wordpress-mom:
+    #  image: wordpress
+     # container_name: wordpress-mom
+      #restart: always
+      #ports:
+       # - 24011:80
+        #Wordpress saves its port during setup to the database, change it there or allways keep the same port
+      #environment:
+       # WORDPRESS_DB_HOST: db-mom
+        #WORDPRESS_DB_USER: user_wordpress
+        #WORDPRESS_DB_PASSWORD: asR78{~?P2235Ad5dd
+        #WORDPRESS_DB_NAME: wordpress
+        #Setup a proper account for mysql - https://wordpress.org/support/article/creating-database-for-wordpress/#using-the-mysql-client
+      #volumes:
+       # - /local/docker-data/wordpress-mom:/var/www/html
+      #depends_on:
+        #- db
+
+    wordpress-tracy:
+      image: wordpress
+      container_name: wordpress-tracy
+      restart: always
+      ports:
+        - 24012:80
+      environment:
+        WORDPRESS_DB_HOST: db-tracy
+        WORDPRESS_DB_USER: user_wordpress
+        WORDPRESS_DB_PASSWORD: asR78{~?P2235Ad5dd
+        WORDPRESS_DB_NAME: wordpress
+      volumes:
+        - /local/docker-data/wordpress-tracy:/var/www/html
+      depends_on:
+        - db
+
+
+    portainer:
+        ports:
+            - '8000:8000'
+            - '9443:9443'
+        container_name: portainer
+        restart: always
+        volumes:
+            - '/var/run/docker.sock:/var/run/docker.sock'
+            - '/local/docker-data/portainer_data:/data'
+        image: 'portainer/portainer-ce:latest'
+        #username admin
+        #password --askjoe
+
+###################################################################### JAKE ########################################################################
+    web:
+        image: 'gitlab/gitlab-ce:latest'
+        container_name: gitlab
+        restart: always
+        hostname: 'gitlab.assumptions.network'
+        environment:
+          GITLAB_OMNIBUS_CONFIG: |
+            external_url 'https://gitlab.assumptions.network'
+            # Add any other gitlab.rb configuration here, each on its own line
+        ports:
+          - '24009:80'
+          - '24010:443'
+          - '2222:22'
+        volumes:
+          - '/local/docker-data/gitlab/config:/etc/gitlab'
+          - '/local/docker-data/gitlab/logs:/var/log/gitlab'
+          - '/local/docker-data/gitlab/data:/var/opt/gitlab'
+        shm_size: '256m'
+
+
