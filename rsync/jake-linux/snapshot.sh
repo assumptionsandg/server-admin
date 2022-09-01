@@ -1,19 +1,17 @@
 #!/bin/sh
-#TEMPLATE FILE (INCOMPLETE)
+#TEMPLATE FILE (DO NOT USE)
 
 #Test snapshot backup w/ rsync
 
-who="assumptions"
-opt="-aPh"
-lnk="--link-dest=/snapshots/username/last/" 
-src="/home/username/files/"
-dest="/local/data/$who-data/"
-last="/snapshots/username/last"
+who="template" #Unix username
+winwho="template" #Windows username
+opt="-aP --delete --quiet -e ssh"
+src="/home/$who/test/" #Backup source (for Windows /mnt/c/Users/$winwho/test)
+dest="/home/$who/test/" #Backup destination
 date=`date "+%Y-%b-%d:_%T"`
-origin="$who@internal.hnet"
+origin="$who@internal.hnet" #interal.hnet is @hutchinson, replace with desired server.
 
-rsync $OPT $LINK $SRC ${SNAP}$date
+ionice -c 3 -p $$
+renice +12  -p $$
 
-rm -f $LAST
-
-ln -s ${SNAP}$date $LAST
+rsync $opt $src $origin:/${dest}$date 
