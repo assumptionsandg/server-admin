@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #Prune backups to save disk space
 
@@ -7,5 +7,7 @@ dir=$1
 cmd=$(ls -l $dir | wc -l)
 old=$(ls -t $dir | tail -1)
 
-if [ $cmd -l $limit ] then;
+if [ ${cmd} -gt ${limit} ] 
+then
     rm -rf $dir/$old
+fi

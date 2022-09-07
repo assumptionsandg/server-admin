@@ -1,0 +1,1 @@
+30 3 * * * "/local/server-data/server-admin/rsync/server/prune-snapshot.sh /local/assumptions-data/backups/windows/docs > /dev/null"
